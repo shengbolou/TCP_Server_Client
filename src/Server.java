@@ -75,6 +75,7 @@ public class Server {
             System.out.println("Result: " + result);
             resultMsg = statusCode+","+ result + '\n';
             outToClient.writeBytes(resultMsg);
+            
 
             //close socket, reader and writer
             connectionSocket.close();
