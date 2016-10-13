@@ -40,40 +40,66 @@ public class Server {
             clientSentence = inFromClient.readLine();
             //get oc and two integers
             String[] inputs = clientSentence.split(",");
-            String oc = inputs[0];
-            int int1 = Integer.valueOf(inputs[1]);
-            int int2 = Integer.valueOf(inputs[2]);
 
-            //if int1 and int2 are integers
-            if(int1 == (int)int1 && int2 == (int)int2){
-                switch (oc){
-                    case "+":
-                        result = int1 + int2;
-                        break;
-                    case "-":
-                        result = int1 - int2;
-                        break;
-                    case "*":
-                        result = int1 * int2;
-                        break;
-                    case "/":
-                        result = int1 / int2;
-                        break;
-                    //invalid oc
-                    default:
-                        statusCode = 300;
-                        result = -1;
-                        break;
-                }
-            }
-            //invalid integers
-            else{
+            //if user doesn't enter correct inputs
+            if(inputs.length!=3){
                 statusCode = 300;
                 result = -1;
             }
+            else{
+                String oc = inputs[0];
+
+                try{
+                    int int1 = Integer.valueOf(inputs[1]);
+                    int int2 = Integer.valueOf(inputs[2]);
+
+                    //if int1 and int2 are integers
+                    if(int1 == (int)int1 && int2 == (int)int2){
+                        switch (oc){
+                            case "+":
+                                statusCode = 200;
+                                result = int1 + int2;
+                                break;
+                            case "-":
+                                statusCode = 200;
+                                result = int1 - int2;
+                                break;
+                            case "*":
+                                statusCode = 200;
+                                result = int1 * int2;
+                                break;
+                            case "/":
+                                statusCode = 200;
+                                result = int1 / int2;
+                                break;
+                            //invalid oc
+                            default:
+                                statusCode = 300;
+                                result = -1;
+                                break;
+                        }
+                    }
+                    //invalid integers
+                    else{
+                        statusCode = 300;
+                        result = -1;
+                    }
+                }
+                //handle invalid inputs
+                catch (NumberFormatException e){
+                    statusCode = 300;
+                    result = -1;
+                }
+            }
+
+            //print out status and result
             System.out.println("Status code: " + statusCode);
             System.out.println("Result: " + result);
+
+            //generate response msg
             resultMsg = statusCode+","+ result + '\n';
+
+            //send to clients
             outToClient.writeBytes(resultMsg);
             
 
