@@ -1,5 +1,4 @@
-import java.io.DataInputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -9,70 +8,78 @@ import java.net.Socket;
  * Server Class
  */
 public class Server {
-    //variables
+    //port num
     private final static int PORT_NUM = 52414;
-    private static ServerSocket server;
-    private static Socket clientSocket;
-    private static DataInputStream inputStream;
-    private static PrintStream outStream;
 
-    public static void main(String[] args){
+    public static void main(String argv[]) throws Exception
+    {
+        //client sentence contains oc and two integers
+        String clientSentence;
 
-        try{
-            //open a server socket
-            server = new ServerSocket(PORT_NUM);
-            System.out.println("Server is running at port " + server.getLocalPort());
+        //status code and result values
+        int statusCode = 200;
+        int result = 0;
 
-            //user inputs
-            String oc = "";
-            int int1 = 0;
-            int int2 = 0;
+        //result msg that is sent back to clients
+        String resultMsg;
 
-            //status code
-            int statusCode = 200;
+        //open a server socket
+        ServerSocket welcomeSocket = new ServerSocket(PORT_NUM);
+        System.out.println("Server is running and listening at port " + welcomeSocket.getReceiveBufferSize());
 
-            while(true)
-            {
-                //start listening for clients
-                clientSocket = server.accept();
-                //initiate input stream to read inputs from client socket
-                inputStream = new DataInputStream(clientSocket.getInputStream());
-                //initiate output stream to send msg to clients
-                outStream = new PrintStream(clientSocket.getOutputStream());
+        while(true) {
+            //start accepting clients
+            Socket connectionSocket = welcomeSocket.accept();
+            System.out.println("Client is connected...");
+            //initiate reader that reads inputs from clients
+            BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+            //initiate writer that sends msg to clients
+            DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
 
-                if(inputStream.available()>0){
-                    oc = inputStream.readLine();
-                    int1 = Integer.parseInt(inputStream.readLine());
-                    int2 = Integer.parseInt(inputStream.readLine());
-                }else{
-                    continue;
+            //get client inputs
+            clientSentence = inFromClient.readLine();
+            //get oc and two integers
+            String[] inputs = clientSentence.split(",");
+            String oc = inputs[0];
+            int int1 = Integer.valueOf(inputs[1]);
+            int int2 = Integer.valueOf(inputs[2]);
+
+            //if int1 and int2 are integers
+            if(int1 == (int)int1 && int2 == (int)int2){
+                switch (oc){
+                    case "+":
+                        result = int1 + int2;
+                        break;
+                    case "-":
+                        result = int1 - int2;
+                        break;
+                    case "*":
+                        result = int1 * int2;
+                        break;
+                    case "/":
+                        result = int1 / int2;
+                        break;
+                    //invalid oc
+                    default:
+                        statusCode = 300;
+                        result = -1;
+                        break;
                 }
-
-                //validate inputs
-                if((oc.equals("+")||oc.equals("-")||oc.equals("*")||oc.equals("/")) && int1==(int)int1 && int2==(int)int2)
-                {
-                    statusCode = 200;
-                    outStream.println(int1+int2);
-                    System.out.println(int1+int2);
-                }
-                else{
-                    statusCode = 300;
-                    outStream.println(-1);
-                }
-
             }
-
-        }catch (Exception e){
-            e.printStackTrace();
-        }finally {
-            try{
-                inputStream.close();
-                outStream.close();
-                server.close();
-                clientSocket.close();
-            }catch (Exception e){
-                e.printStackTrace();
+            //invalid integers
+            else{
+                statusCode = 300;
+                result = -1;
             }
+            System.out.println("Status code: " + statusCode);
+            System.out.println("Result: " + result);
+            resultMsg = statusCode+","+ result + '\n';
+            outToClient.writeBytes(resultMsg);
+
+            //close socket, reader and writer
+            connectionSocket.close();
+            inFromClient.close();
+            outToClient.close();
         }
     }
 }
